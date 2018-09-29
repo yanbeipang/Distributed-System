@@ -4,15 +4,30 @@ import "os"
 import "fmt"
 import "mapreduce"
 import "container/list"
+import "strings"
+import "strconv" 
+import "unicode"
 
 // our simplified version of MapReduce does not supply a
 // key to the Map function, as in the paper; only a value,
 // which is a part of the input file contents
 func Map(value string) *list.List {
+  list := list.New()
+
+  words := strings.FieldsFunc(value, func(r rune) bool {
+      return !unicode.IsLetter(r)
+    })
+
+  for _, word := range words {
+      list.PushBack(mapreduce.KeyValue{Key: word, Value: "1"})
+  }
+
+  return list
 }
 
 // iterate over list and add values
 func Reduce(key string, values *list.List) string {
+    return strconv.Itoa(values.Len())
 }
 
 // Can be run in 3 ways:
