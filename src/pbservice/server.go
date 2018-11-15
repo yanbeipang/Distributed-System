@@ -37,7 +37,7 @@ type PBServer struct {
   mu sync.Mutex
   rwmu sync.RWMutex
   view *viewservice.View
-  // Your declarations here.
+
 }
 
 func (pb *PBServer) HandlePut(args *PutArgs, reply *PutReply) error {
@@ -46,7 +46,6 @@ func (pb *PBServer) HandlePut(args *PutArgs, reply *PutReply) error {
   if args.DoHash == true {
 
     pb.mu.Lock()
-    //fmt.Printf("%#v\n", args)
     previousValue, ok := pb.db[args.Key]
 
     if !ok {
@@ -74,7 +73,7 @@ func (pb *PBServer) HandlePut(args *PutArgs, reply *PutReply) error {
 }
 
 func (pb *PBServer) ForwardPut(forward_args *PutArgs, forward_reply *PutReply) error {
-  //pb.mu.Lock()
+
   args := &PutArgs{}
 
   args.Id = forward_args.Id
@@ -89,17 +88,12 @@ func (pb *PBServer) ForwardPut(forward_args *PutArgs, forward_reply *PutReply) e
   for !ok && pb.view.Backup != "" {
     ok = call(pb.view.Backup, "PBServer.Put", args, &forward_reply)
   }
-  //pb.mu.Unlock()
 
   return nil
 
 }
 
 func (pb *PBServer) Put(args *PutArgs, reply *PutReply) error {
-
-  //pb.mu.Lock()
-  //defer pb.mu.Unlock()
-  // Your code here.
   
   // if it is the same put as before, do nothing and return the same result
   pb.rwmu.Lock()
@@ -112,6 +106,8 @@ func (pb *PBServer) Put(args *PutArgs, reply *PutReply) error {
     return nil
     
   }
+
+  time.Sleep(viewservice.PingInterval)
 
   // commit: unlock()
   // if the server is primary
@@ -206,13 +202,8 @@ func (pb *PBServer) tick() {
 
   view, _ := pb.vs.Ping(pb.view.Viewnum)
 
-
   // server is primary server, and there is new backup, send db to the backup 
   if view.Primary == pb.me && view.Backup != "" && view.Viewnum != pb.view.Viewnum {
-  //if view.Primary == pb.me && view.Backup != "" && view.Viewnum != pb.view.Viewnum && view.Backup != pb.view.Backup {
-    //fmt.Printf("I %v, DB is %v\n", pb.me, pb.db)
-    //fmt.Printf("Send DB to: %v \n", view.Backup)
-
     args := &SendDBArgs{}
     args.DB = pb.db
     args.Sender = pb.me
@@ -221,9 +212,8 @@ func (pb *PBServer) tick() {
     call(view.Backup, "PBServer.SendDB", args, &reply)
 
   }
-
   pb.view = &view
-  // Your code here.
+
 }
 
 
@@ -243,7 +233,6 @@ func StartServer(vshost string, me string) *PBServer {
   pb.db = make(map[string]string)
   pb.log = make(map[int64][]string)
   pb.view = new(viewservice.View)
-  // Your pb.* initializations here.
 
   rpcs := rpc.NewServer()
   rpcs.Register(pb)

@@ -30,7 +30,6 @@ func port(tag string, host int) string {
   return s
 }
 
-
 func TestBasicFail(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
@@ -52,7 +51,7 @@ func TestBasicFail(t *testing.T) {
   if vck.Primary() != s1.me {
     t.Fatal("first primary never formed view")
   }
-  //fmt.Println("I am here!")
+
   ck.Put("111", "v1")
   check(ck, "111", "v1")
 
@@ -165,7 +164,7 @@ func TestAtMostOnce(t *testing.T) {
 
   for iters := 0; iters < viewservice.DeadPings*2; iters++ {
     view, _ := vck.Get()
-    //fmt.Printf("\n%#v", view)
+ 
     if view.Primary != "" && view.Backup != "" {
       break
     }
@@ -180,16 +179,16 @@ func TestAtMostOnce(t *testing.T) {
   val := ""
   for i := 0; i < 100; i++ {
     v := strconv.Itoa(i)
-    //fmt.Printf("\nhash value\n"+v)
+
     pv := ck.PutHash(k, v)
     
-    //fmt.Printf("\nreturned value\n"+pv)
+
     if pv != val {
       t.Fatalf("ck.Puthash() returned %v but expected %v\n", pv, val)
     }
     h := hash(val + v)
     val = strconv.Itoa(int(h))
-    //fmt.Printf("\nafter hash\n"+val)
+
   }
 
   v := ck.Get(k)
@@ -329,8 +328,7 @@ func TestConcurrentSame(t *testing.T) {
   done := false
 
   view1, _ := vck.Get()
-  //fmt.Printf("%#v", view1)
-  //Primary:"/var/tmp/824-501/pb-17557-cs-1", Backup:"/var/tmp/824-501/pb-17557-cs-2"
+
   const nclients = 3
   const nkeys = 2
   for xi := 0; xi < nclients; xi++ {
@@ -344,12 +342,12 @@ func TestConcurrentSame(t *testing.T) {
       }
     }(xi)
   }
-  //fmt.Printf("hi\n")
+
   time.Sleep(5 * time.Second)
   done = true
-  //fmt.Printf("hello\n")
+
   time.Sleep(time.Second)
-  //fmt.Printf("hola\n")
+
   // read from primary
   ck := MakeClerk(vshost, "")
   var vals [nkeys]string
@@ -526,9 +524,7 @@ func TestRepeatedCrash(t *testing.T) {
 
   // wait a bit for primary to initialize backup
   time.Sleep(viewservice.DeadPings * viewservice.PingInterval)
-  //view,_ := vck.Get()
-  //fmt.Printf("%#v", view)
-  //Primary: /var/tmp/824-501/pb-63133-rc-1; Backup: /var/tmp/824-501/pb-63133-rc-2
+
   done := false
 
   go func() {
@@ -536,23 +532,18 @@ func TestRepeatedCrash(t *testing.T) {
     rr := rand.New(rand.NewSource(int64(os.Getpid())))
     for done == false {
       i := rr.Int() % nservers
-      //fmt.Printf("%v killing %v\n", ts(), 5001+i)
-      //fmt.Printf("killing %v\n", i+1)
+
       sa[i].kill()
 
       // wait long enough for new view to form, backup to be initialized
       time.Sleep(2 * viewservice.PingInterval * viewservice.DeadPings)
 
       sa[i] = StartServer(vshost, port(tag, i+1))
-      //fmt.Printf("%v is alive now\n", i+1)
 
       // wait long enough for new view to form, backup to be initialized
       time.Sleep(2 * viewservice.PingInterval * viewservice.DeadPings)
     }
   } ()
-
-  count1 := 0
-  count2 := 0
 
   const nth = 2
   var cha [nth]chan bool
@@ -568,38 +559,27 @@ func TestRepeatedCrash(t *testing.T) {
         k := strconv.Itoa((i * 1000000) + (rr.Int() % 10))
         wanted, ok := data[k]
         if ok {
-          count1++
-          fmt.Printf("count1: %v\n",count1)
+
           v := ck.Get(k)
-          count2++
-          fmt.Printf("count2: %v\n",count2)
-          //fmt.Printf(v+"\n")
-          if xi == 0 {fmt.Printf("v: "+v+"\n")}
+
           if v != wanted {
-            //view,_ := vck.Get()
-            //fmt.Printf("%#v\n", view)            
+         
             t.Fatalf("key=%v wanted=%v got=%v", k, wanted, v)
           }
         }
         nv := strconv.Itoa(rr.Int())
-
-
-        //fmt.Printf("nv: "+nv+"\n")
         ck.Put(k, nv)
 
-        //fmt.Printf("nv: "+nv+"\n")
         data[k] = nv
-        //fmt.Printf("nv: "+nv+"\n")
+
         // if no sleep here, then server tick() threads do not get 
         // enough time to Ping the viewserver.
         time.Sleep(10 * time.Millisecond)
-        //view,_ := vck.Get()
-        //fmt.Printf("%#v\n", view)
+
 
       }
       ok = true
-      //fmt.Printf("Hi I am here!\n")
-      //fmt.Printf("ok\n")
+
     }(xi)
   }
 
@@ -609,8 +589,7 @@ func TestRepeatedCrash(t *testing.T) {
 
   for i := 0; i < nth; i++ {
     ok := <- cha[i]
-    //fmt.Printf("%#v\n",ok)
-    //t.Fatal("END")
+
     if ok == false {
       t.Fatal("child failed")
     }
@@ -635,7 +614,6 @@ func TestRepeatedCrash(t *testing.T) {
   time.Sleep(time.Second)
 }
 
-//**********************************
 func TestRepeatedCrashUnreliable(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
@@ -747,7 +725,7 @@ func TestRepeatedCrashUnreliable(t *testing.T) {
   vs.Kill()
   time.Sleep(time.Second)
 }
-//**********************************
+
 
 func proxy(t *testing.T, port string, delay *int) {
   portx := port + "x"

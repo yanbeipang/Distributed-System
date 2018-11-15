@@ -13,7 +13,7 @@ type Clerk struct {
   vs *viewservice.Clerk
   view *viewservice.View
   me string
-  // Your declarations here
+
 }
 
 func nrand() int64 {
@@ -29,7 +29,6 @@ func MakeClerk(vshost string, me string) *Clerk {
   ck.vs = viewservice.MakeClerk(me, vshost)
 
   ck.view = new(viewservice.View)
-  // Your ck.* initializations here
 
   return ck
 }
@@ -113,7 +112,7 @@ func (ck *Clerk) Get(key string) string {
   }
 
   return reply.Value
-  // Your code here.
+
 
 }
 
@@ -150,7 +149,6 @@ func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
 
     ok = call(primary, "PBServer.Put", args, &reply)
   }
-  // Your code here.
 
   return reply.PreviousValue
 }
