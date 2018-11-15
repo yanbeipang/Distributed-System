@@ -13,6 +13,8 @@ type Clerk struct {
 }
 
 func MakeClerk(me string, server string) *Clerk {
+  //fmt.Println(me)
+  //fmt.Println(server)
   ck := new(Clerk)
   ck.me = me
   ck.server = server
@@ -64,6 +66,7 @@ func (ck *Clerk) Ping(viewnum uint) (View, error) {
   if ok == false {
     return View{}, fmt.Errorf("Ping(%v) failed", viewnum)
   }
+  //fmt.Printf("%#v", reply.View.Primary)
 
   return reply.View, nil
 }
@@ -80,6 +83,7 @@ func (ck *Clerk) Get() (View, bool) {
 
 func (ck *Clerk) Primary() string {
   v, ok := ck.Get()
+  //fmt.Println(ok)
   if ok {
     return v.Primary
   }

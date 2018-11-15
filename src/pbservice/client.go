@@ -6,20 +6,29 @@ import "fmt"
 
 // You'll probably need to uncomment these:
 // import "time"
-// import "crypto/rand"
-// import "math/big"
-
-
+import "crypto/rand"
+import "math/big"
 
 type Clerk struct {
   vs *viewservice.Clerk
+  view *viewservice.View
+  me string
   // Your declarations here
 }
 
+func nrand() int64 {
+ max := big.NewInt(int64(1) << 62)
+ bigx, _ := rand.Int(rand.Reader, max)
+ x := bigx.Int64()
+ return x
+}
 
 func MakeClerk(vshost string, me string) *Clerk {
   ck := new(Clerk)
+  ck.me = me
   ck.vs = viewservice.MakeClerk(me, vshost)
+
+  ck.view = new(viewservice.View)
   // Your ck.* initializations here
 
   return ck
@@ -61,16 +70,51 @@ func call(srv string, rpcname string,
 
 //
 // fetch a key's value from the current primary;
-// if they key has never been set, return "".
+// if the key has never been set, return "".
 // Get() must keep trying until it either the
 // primary replies with the value or the primary
 // says the key doesn't exist (has never been Put().
 //
 func (ck *Clerk) Get(key string) string {
 
+  id := nrand()
+
+  args := &GetArgs{}
+  args.Key = key
+  args.Id = id
+  args.Sender = ck.me
+  var reply GetReply
+
+  view, _ := ck.vs.Get()
+  ck.view = &view
+
+  primary := ck.view.Primary
+
+  for primary == "" {
+    view, _ := ck.vs.Get()
+    ck.view = &view
+    primary = ck.view.Primary   
+  }
+
+
+  ok := call(primary, "PBServer.Get", args, &reply)
+
+  // keep trying until primary replies
+  for !ok || reply.Err == ErrWrongServer {
+    view, _ := ck.vs.Get()
+    ck.view = &view
+    primary = ck.view.Primary 
+    ok = call(primary, "PBServer.Get", args, &reply)
+  }
+
+  // if the key has never been set, return ""
+  if reply.Err == ErrNoKey {
+    return ""
+  }
+
+  return reply.Value
   // Your code here.
 
-  return "???"
 }
 
 //
@@ -78,15 +122,44 @@ func (ck *Clerk) Get(key string) string {
 // must keep trying until it succeeds.
 //
 func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
+  id := nrand()
 
+  args := &PutArgs{}
+  args.Id = id
+  args.Key = key
+  args.Value = value
+  args.DoHash = dohash
+  args.Sender = ck.me
+  args.Forward = false
+
+  var reply PutReply
+
+  primary := ck.view.Primary
+  for primary == "" {
+    view, _ := ck.vs.Get()
+    ck.view = &view
+    primary = ck.view.Primary   
+  }
+
+  ok := call(primary, "PBServer.Put", args, &reply)
+
+  for !ok || reply.Err == ErrWrongServer{
+    view, _ := ck.vs.Get()
+    ck.view = &view
+    primary = ck.view.Primary
+
+    ok = call(primary, "PBServer.Put", args, &reply)
+  }
   // Your code here.
-  return "???"
+
+  return reply.PreviousValue
 }
 
 func (ck *Clerk) Put(key string, value string) {
   ck.PutExt(key, value, false)
 }
 func (ck *Clerk) PutHash(key string, value string) string {
+
   v := ck.PutExt(key, value, true)
   return v
 }

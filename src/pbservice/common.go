@@ -9,10 +9,22 @@ const (
 )
 type Err string
 
+type SendDBArgs struct {
+  Sender string
+  DB map[string]string
+}
+
+type SendDBReply struct {
+  Err Err
+}
+
 type PutArgs struct {
   Key string
   Value string
   DoHash bool // For PutHash
+  Id int64
+  Sender string
+  Forward bool
   // You'll have to add definitions here.
 
   // Field names must start with capital letters,
@@ -26,6 +38,8 @@ type PutReply struct {
 
 type GetArgs struct {
   Key string
+  Id int64
+  Sender string
   // You'll have to add definitions here.
 }
 

@@ -54,6 +54,7 @@ func Test1(t *testing.T) {
 
   for i := 0; i < DeadPings * 2; i++ {
     view, _ := ck1.Ping(0)
+
     if view.Primary == ck1.me {
       break
     }
@@ -130,9 +131,13 @@ func Test1(t *testing.T) {
       vx = v
       time.Sleep(PingInterval)
     }
+
     check(t, ck1, ck1.me, ck3.me, vx.Viewnum + 1)
+
+    //fmt.Printf("%#v\n", ck1.me)
   }
   fmt.Printf("  ... Passed\n")
+  
 
   // kill and immediately restart the primary -- does viewservice
   // conclude primary is down even though it's pinging?
@@ -145,12 +150,14 @@ func Test1(t *testing.T) {
       ck1.Ping(0)
       ck3.Ping(vx.Viewnum)
       v, _ := ck3.Get()
+
       if v.Primary != ck1.me {
         break
       }
       time.Sleep(PingInterval)
     }
     vy, _ := ck3.Get()
+    
     if vy.Primary != ck3.me {
       t.Fatalf("expected primary=%v, got %v\n", ck3.me, vy.Primary)
     }
@@ -167,6 +174,7 @@ func Test1(t *testing.T) {
       time.Sleep(PingInterval)
     }
     v, _ := ck3.Get()
+
     if v.Primary != ck3.me || v.Backup != "" {
       t.Fatalf("wrong primary or backup")
     }
@@ -178,12 +186,14 @@ func Test1(t *testing.T) {
   
   {
     // set up p=ck3 b=ck1, but
-    // but do not ack
+    // but do not ack 
     vx, _ := ck1.Get()
+    //fmt.Printf("%#v\n", vx) // vx.num = 6, vx.primary = 3, vx.backup = ""
     for i := 0; i < DeadPings * 3; i++ {
       ck1.Ping(0)
       ck3.Ping(vx.Viewnum)
       v, _ := ck1.Get()
+      //fmt.Printf("%#v\n", v) // v.num = 7, v.primary = 3, v.backup = 1
       if v.Viewnum > vx.Viewnum {
         break
       }
@@ -191,10 +201,12 @@ func Test1(t *testing.T) {
     }
     check(t, ck1, ck3.me, ck1.me, vx.Viewnum+1)
     vy, _ := ck1.Get()
+    
     // ck3 is the primary, but it never acked.
     // let ck3 die. check that ck1 is not promoted.
     for i := 0; i < DeadPings * 3; i++ {
       v, _ := ck1.Ping(vy.Viewnum)
+      //fmt.Printf("%#v\n", v) 
       if v.Viewnum > vy.Viewnum {
         break
       }
