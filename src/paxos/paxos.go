@@ -29,7 +29,7 @@ import "sync"
 import "fmt"
 import "math/rand"
 import "time"
-//import "strconv"
+
 
 
 type Paxos struct {
@@ -44,7 +44,6 @@ type Paxos struct {
   peers_done []int //the Done value of all peers, index is the paxos peer
   instance_status map[int]*instance_status//keep status for each instance within the local paxos peer
                                             //key is the seq of instance, value including decided or not, value of the decision
-  
   instance_info map[int]*instance_info //key is the seq of instance                                 
 }
 
@@ -96,7 +95,6 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
     var info instance_info
     info.n_p = 0
     info.n_a = -1
-    info.time_tried = 0
     px.instance_info[args.Seq] = &info
   }
 
@@ -108,21 +106,14 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 
   info := px.instance_info[args.Seq]
 
-  //fmt.Printf("Before, I am %v, my n_p is %v, propose_n is %v, for seq %v\n", px.me, info.n_p, args.Propose_n, args.Seq)
-  
   if args.Propose_n >= info.n_p {
-  
     info.n_p =  args.Propose_n
     reply.PrepareOK = true
-
   } else {
     reply.PrepareOK = false
   }
   px.mu.Unlock()
 
-  
-  //fmt.Printf("After, I am %v, my n_p is %v, propose_n is %v, for seq %v, my reply is %v\n", px.me, info.n_p, args.Propose_n, args.Seq, reply.PrepareOK)
-  //fmt.Printf("In Prepare step, I am %v, for seq %v, my n_p is %v, I receive propose_n %v, my reply is %v\n", px.me, args.Seq, px.instance_info[args.Seq].n_p, args.Propose_n, reply.PrepareOK)
   reply.N_a = info.n_a
   reply.N_p = info.n_p
   reply.V_a = info.v_a
@@ -135,15 +126,12 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 
   px.mu.Lock()
-  
   info := px.instance_info[args.Seq]
 
   if info == nil {
-
     info = &instance_info{}
     info.n_p = 0
     info.n_a = -1
-    info.time_tried = 0
   }
   if args.Propose_n >= info.n_p {
     info.n_p = args.Propose_n
@@ -169,12 +157,11 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
  
   if status == nil {
       status = &instance_status{}
-
   }
   status.decided = true
   status.value = args.Value
   reply.DecideOK = true
-  //fmt.Printf("I am %v, for seq %v, my decided value is %#v\n", px.me, args.Seq, status.value)
+
   return nil
 }
 
@@ -207,19 +194,13 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
     
     if !ok || status == nil { // if the instance not existed, add to the status map and info map
       status = &instance_status{}
-      status.decided = false
-      // var status instance_status
-      // status.decided = false
-      // px.instance_status[seq] = & status
-      
+      status.decided = false      
     }
 
     if !info_ok || info == nil {
       info = &instance_info{}
       info.n_p = 0
       info.n_a = -1
-      info.time_tried = 0
-      //px.instance_info[seq] = & info
     }
 
     propose_n := info.n_p + px.me + 1
@@ -227,24 +208,16 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
     info.n_p = propose_n
     px.mu.Unlock()
 
-    //fmt.Printf("I am %v, my current n_p is %v, for seq %v, my proposal number is %v: \n", px.me, px.instance_info[seq].n_p, seq, propose_n)
-
-    
     args := &PrepareArgs{seq, propose_n}
-    // args.Seq = seq
-    // args.Propose_n = propose_n
+
     npaxos := len(px.peers)
     prepare_replies := make([]PrepareReply, npaxos)
 
     for i := 0; i < npaxos; i++ {
       var reply PrepareReply
       if i != px.me {
-        // ok := false
-        // t := time.Now()
-        // set time out for waiting reply
-        // for !ok && time.Since(t) < 10 * time.Millisecond && px.dead == false {
-          call(px.peers[i], "Paxos.Prepare", args, &reply)
-        // }
+        call(px.peers[i], "Paxos.Prepare", args, &reply)
+
       } else if i == px.me{
         // if it's local paxos, make function call directly
           px.Prepare(args, &reply)
@@ -252,11 +225,9 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
       prepare_replies[i] = reply
     }
 
-    //fmt.Printf("Prepare Step: I am %v, I have already called all my peers!\n", px.me)
-
     // check if majorites reply ok, also keep track of the v_a with highest n_a, and update n_p to keep it as the highest 
     prepareOK_count := 0
-    //prepareNotOK_count := 0
+
     max_n_a := -1
     for i := 0; i < npaxos; i++ {
       reply := prepare_replies[i]
@@ -270,7 +241,7 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
         } 
         px.mu.Lock()
         info := px.instance_info[seq]
-        //fmt.Printf("info is: %#v\n", info)
+ 
         if info == nil {
           info = & instance_info{}
           info.n_p = 0
@@ -281,14 +252,10 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
         }
         px.mu.Unlock()
       }
-      // if reply == (PrepareReply{}) || reply.PrepareOK == false {
-      //   prepareNotOK_count ++
-      // }
+
     }
-    //fmt.Printf("Prepare Step: I am %v, for seq %v, I propose with propose_n %v\n", px.me, seq, propose_n)
 
     if prepareOK_count >= (npaxos / 2) + 1 {
-      //fmt.Printf("I am proposer %v, for seq %v, my propose number is %v, I received prepareOK, and I propose value %v for it\n", px.me, seq, propose_n, v)
       px.StartAccept(seq, propose_n, v)
     }
     time.Sleep(time.Millisecond * 5)
@@ -306,13 +273,8 @@ func (px *Paxos) StartPrepare(seq int, v interface{}) {
 
 //majority is ok, send accept() to all paxos, create a list of replies; samely, using for loop to wait for replies;
 func (px *Paxos) StartAccept(seq int, propose_n int, v interface{}) {
-
-  //fmt.Printf("I am %v, for seq %v, my propose number is %v, I propose value %v\n", px.me, seq, propose_n, v)
   
-  args := &AcceptArgs{}
-  args.Seq = seq
-  args.Propose_n = propose_n
-  args.Value = v
+  args := &AcceptArgs{seq, propose_n, v}
   npaxos := len(px.peers)
   accept_replies := make([]AcceptReply, npaxos)
 
@@ -323,12 +285,10 @@ func (px *Paxos) StartAccept(seq int, propose_n int, v interface{}) {
       t := time.Now()
       // set time out for waiting reply
       for !ok && time.Since(t) < 10 * time.Millisecond && px.dead == false {
-        //fmt.Printf("Accept Step: I am %v, I am calling %v\n", px.me, i)
         ok = call(px.peers[i], "Paxos.Accept", args, &reply)
       }
 
     } else if i == px.me && px.dead == false {
-      // if it's local paxos, make function call directly
       px.Accept(args, &reply)
     }
     accept_replies[i] = reply
@@ -355,26 +315,19 @@ func (px *Paxos) StartAccept(seq int, propose_n int, v interface{}) {
 
 // if accpet majority is ok, send decide() to all paxos
 func (px *Paxos)StartDecide(seq int, propose_n int, v interface{}) {
-  //fmt.Printf("I am %v, for seq %v, my propose number is %v, I decide value %v\n", px.me, seq, propose_n, v)
-  args := &DecideArgs{}
-  args.Seq = seq
-  args.Propose_n = propose_n
-  args.Value = v
+
+  args := &DecideArgs{seq, propose_n, v}
   npaxos := len(px.peers)
-  //decide_replies := make([]DecideReply, npaxos)
 
   for i := 0; i < npaxos; i++ {
     var reply DecideReply
-    //ok := false
+
     if i != px.me {
-      //for (!ok || reply == (DecideReply{}) || reply.DecideOK == false) && px.dead == false {
-        call(px.peers[i], "Paxos.Decide", args, &reply)
-      //}
+      call(px.peers[i], "Paxos.Decide", args, &reply)
     } else if i == px.me && px.dead == false {
       // if it's local paxos, make function call directly
       px.Decide(args, &reply)
     }
-    //decide_replies[i] = reply
   }
 
   return
@@ -389,45 +342,12 @@ func (px *Paxos)StartDecide(seq int, propose_n int, v interface{}) {
 func (px *Paxos) Start(seq int, v interface{}) {
   time.Sleep(time.Millisecond * 5)
   // if seq is smaller than Min(), ignore it
-
   min := px.Min()
-  //fmt.Printf("px.Min() is %v\n", min)
   if seq < min {
     return
   }
-  // // if the instance already decided, ignore it
-  // px.mu.Lock()
-  // s, ok := px.instance_status[seq]
-  // _, info_ok := px.instance_info[seq]
-  // if ok && s.decided == true {
-  //   px.mu.Unlock()
-  //   return 
-  // }
   
-  // if !ok { // if the instance not existed, add to the status map and info map
-  //   var status instance_status
-  //   status.decided = false
-  //   px.instance_status[seq] = & status
-    
-  // }
-
-  // if !info_ok {
-  //   var info instance_info
-  //   info.n_p = 0
-  //   info.n_a = -1
-  //   info.time_tried = 0
-  //   px.instance_info[seq] = & info
-  // }
-
-  // propose_n := px.instance_info[seq].n_p + px.me + 1
-
-  // px.instance_info[seq].n_p = propose_n
-  // px.mu.Unlock()
-
-  // //fmt.Printf("I am %v, my current n_p is %v, for seq %v, my proposal number is %v: \n", px.me, px.instance_info[seq].n_p, seq, propose_n)
-
   go func(){
-    //time.Sleep(10*time.Millisecond)
     px.StartPrepare(seq, v)
   }()
 
@@ -569,8 +489,6 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
   px.instance_status = make(map[int]*instance_status)
   px.instance_info = make(map[int]*instance_info)
 
-
-  // Your initialization code here.
 
   if rpcs != nil {
     // caller will create socket &c

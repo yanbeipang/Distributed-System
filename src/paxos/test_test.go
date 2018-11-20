@@ -25,7 +25,6 @@ func ndecided(t *testing.T, pxa []*Paxos, seq int) int {
   for i := 0; i < len(pxa); i++ {
     if pxa[i] != nil {
       decided, v1 := pxa[i].Status(seq)
-      //fmt.Printf("%v is decided? %v\n", seq, decided)
       if decided {
         if count > 0 && v != v1 {
           t.Fatalf("decided values do not match; seq=%v i=%v v=%v v1=%v",
@@ -192,12 +191,11 @@ func TestDeaf(t *testing.T) {
     t.Fatalf("a deaf peer heard about a decision")
   }
 
-  //fmt.Printf("Hello, I am here!\n")
 
   pxa[0].Start(1, "xxx")
-  //fmt.Printf("I am 0, starting for seq 1 with 'xxx' now!\n")
+
   waitn(t, pxa, 1, npaxos-1)
-  //fmt.Printf("Am I succeessful?\n")
+
   time.Sleep(1 * time.Second)
   if ndecided(t, pxa, 1) != npaxos - 1 {
     t.Fatalf("a deaf peer heard about a decision")
@@ -460,7 +458,6 @@ func TestRPCCount(t *testing.T) {
   // 3 decides
 
   expected1 := ninst1 * npaxos * npaxos
-  //fmt.Printf("expected: %v; actual: %v\n", expected1, total1)
   if total1 > expected1 {
     t.Fatalf("too many RPCs for serial Start()s; %v instances, got %v, expected %v",
       ninst1, total1, expected1)
@@ -606,7 +603,6 @@ func TestManyUnreliable(t *testing.T) {
     pxa[i].Start(0, 0)
   }
 
-  fmt.Printf("Hi I am here!\n")
 
   const ninst = 50
   for seq := 1; seq < ninst; seq++ {
@@ -669,7 +665,6 @@ func part(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int) {
         ij := pp(tag, p[i], p[j])
         pj := port(tag, p[j])
         err := os.Link(pj, ij)
-        //fmt.Printf("there is link between pj: %v and ij: %v\n", pj, ij)
         if err != nil {
           // one reason this link can fail is if the
           // corresponding Paxos peer has prematurely quit and
