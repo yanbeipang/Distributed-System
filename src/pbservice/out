@@ -1,0 +1,119 @@
+2018/11/16 10:08:00 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Single primary, no backup ...
+  ... Passed
+Test: Add a backup ...
+  ... Passed
+Test: Primary failure ...
+  ... Passed
+Test: Kill last server, new one should not be active ...
+  ... Passed
+2018/11/16 10:08:09 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: at-most-once Put; unreliable ...
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+connection is shut down
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+  ... Passed
+2018/11/16 10:08:24 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Put() immediately after backup failure ...
+  ... Passed
+Test: Put() immediately after primary failure ...
+  ... Passed
+2018/11/16 10:08:33 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Concurrent Put()s to the same key ...
+  ... Passed
+2018/11/16 10:08:44 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Concurrent Put()s to the same key; unreliable ...
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-2: write: socket is not connected
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-csu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+  ... Passed
+2018/11/16 10:08:54 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Repeated failures/restarts ...
+  ... Put/Gets done ... 
+  ... Passed
+2018/11/16 10:09:19 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Repeated failures/restarts; unreliable ...
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+unexpected EOF
+connection is shut down
+unexpected EOF
+unexpected EOF
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+write unix ->/var/tmp/824-501/pb-49849-rcu-1: write: broken pipe
+unexpected EOF
+unexpected EOF
+  ... Put/Gets done ... 
+  ... Passed
+2018/11/16 10:09:43 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Old primary does not serve Gets ...
+  ... Passed
+2018/11/16 10:09:52 rpc.Register: method "Kill" has 1 input parameters; needs exactly three
+Test: Partitioned old primary does not complete Gets ...
+  ... Passed
+PASS
+ok  	pbservice	124.958s
